@@ -24,7 +24,7 @@ downloaded_log = "./downloaded_images.log"
 zip_output = "./framed_images.zip"
 
 # Securely load Discord credentials from .env file
-discord_exporter_path = "/app/DiscordChatExporter"  # Adjusted path for Railway
+discord_exporter_path = "./DiscordChatExporter.Cli.linux-x64/DiscordChatExporter.CLI"
 discord_token = os.getenv("DISCORD_TOKEN")
 channel_id = os.getenv("DISCORD_CHANNEL_ID")
 
