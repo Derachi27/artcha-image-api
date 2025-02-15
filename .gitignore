@@ -9,7 +9,7 @@ venv/
 *.env
 
 # Ignore logs and temp files
-*.log
+
 *.tmp
 *.bak
 *.swp
@@ -21,9 +21,7 @@ nohup.out
 downloaded_images.log
 framed_images.zip
 
-# Ignore DiscordChatExporter output
-*.json
-DiscordChatExporter.CLI
+
 
 # IDE / Editor config files
 .vscode/
