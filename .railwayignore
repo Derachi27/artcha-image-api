@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite
+venv/
+Art_images.json
+downloaded_images.log
+framed_images.zip
