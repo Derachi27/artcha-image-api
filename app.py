@@ -3,13 +3,13 @@ import requests
 import os
 from PIL import Image
 
-# FastAPI Backend URL
+# ✅ FastAPI Backend URL (Update to your deployed API URL)
 API_URL = "https://artcha-image-api-production.up.railway.app"
 
 st.title("🎨 Artcha Image Processing Automation")
 st.write("Automates downloading, framing, and packaging MidJourney images.")
 
-# 🎨 User Inputs
+# 🎨 **User Inputs**
 frame_color = st.color_picker("Select Frame Color", "#000000")
 frame_size = st.slider("Select Frame Size", 10, 100, 30)
 force_download = st.checkbox("Force Re-Download All Images")
@@ -17,11 +17,13 @@ force_download = st.checkbox("Force Re-Download All Images")
 # ✅ **Progress UI**
 progress_bar = st.progress(0)  # Progress bar
 status_text = st.empty()  # Status updates (Downloading 1/10, Framing 2/10)
+image_preview = st.empty()  # Placeholder for processed image preview
 
 # 🚀 **Run Automation**
 if st.button("Run Automation"):
     st.write("🚀 Running automation...")
     progress_bar.progress(0)  # Start Progress at 0%
+    image_preview.empty()  # Clear old image preview
 
     try:
         response = requests.get(
@@ -37,7 +39,7 @@ if st.button("Run Automation"):
                 if line:
                     decoded_line = line.decode("utf-8").strip()
 
-                    # Extract total images to process
+                    # ✅ Extract total images to process
                     if decoded_line.startswith("🔄 Processing"):
                         try:
                             total_steps = int(decoded_line.split()[2])  # Extract total image count
@@ -64,18 +66,25 @@ if st.button("Run Automation"):
         st.error(f"❌ Error: {e}")
 
 # 📷 **Show Image Preview AFTER Processing**
-if os.path.exists("./framed_images") and os.listdir("./framed_images"):
+processed_folder = "./framed_images"
+if os.path.exists(processed_folder) and os.listdir(processed_folder):
     st.subheader("📷 Processed Image Preview")
-    images = [file for file in os.listdir("./framed_images") if file.endswith((".png", ".jpg", ".jpeg"))]
+    images = [file for file in os.listdir(processed_folder) if file.endswith((".png", ".jpg", ".jpeg"))]
 
     if images:
-        latest_image = os.path.join("./framed_images", images[-1])
-        st.image(Image.open(latest_image), caption="Latest Processed Image", use_container_width=True)
+        latest_image = os.path.join(processed_folder, sorted(images)[-1])  # Sort & get latest
+        image_preview.image(Image.open(latest_image), caption="Latest Processed Image", use_container_width=True)
 
 # 📦 **Download Processed Images**
 if st.button("Download Processed Images"):
     with st.spinner("Zipping images..."):
         response = requests.get(f"{API_URL}/download")
         if response.status_code == 200:
-            with open(response.json()["download_url"], "rb") as file:
-                st.download_button("📥 Download ZIP", file, file_name="framed_images.zip", mime="application/zip")
+            zip_url = response.json().get("download_url")
+            if zip_url and os.path.exists(zip_url):  # Check if ZIP exists
+                with open(zip_url, "rb") as file:
+                    st.download_button("📥 Download ZIP", file, file_name="framed_images.zip", mime="application/zip")
+            else:
+                st.error("⚠️ No processed images found. Try running automation first.")
+        else:
+            st.error(f"❌ API Error: {response.status_code}")

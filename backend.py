@@ -9,6 +9,7 @@ import cv2
 from zipfile import ZipFile
 from dotenv import load_dotenv
 from multiprocessing import Pool
+import asyncio
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,7 +24,7 @@ downloaded_log = "./downloaded_images.log"
 zip_output = "./framed_images.zip"
 
 # Securely load Discord credentials from .env file
-discord_exporter_path = "/app/DiscordChatExporter.CLI"  # Use absolute path in Railway
+discord_exporter_path = "/app/DiscordChatExporter"  # Adjusted path for Railway
 discord_token = os.getenv("DISCORD_TOKEN")
 channel_id = os.getenv("DISCORD_CHANNEL_ID")
 
@@ -87,19 +88,23 @@ def run_automation(
     """ Runs the full automation and streams logs in real time """
 
     if not discord_token or not channel_id:
-        return HTTPException(status_code=500, detail="Missing Discord credentials.")
+        raise HTTPException(status_code=500, detail="Missing Discord credentials.")
 
     downloaded_images = load_downloaded_images(force_download)
     new_downloads = []
-    new_images = 0  # ✅ Initialize new_images properly
+    new_images = 0
 
     def event_stream():
-        nonlocal new_images  # ✅ Fix scope issue
+        nonlocal new_images
 
         yield "🚀 Starting automation...\n"
-        yield "📤 Exporting Discord chat...\n"
 
         # Step 1: Run DiscordChatExporter
+        if not os.path.exists(discord_exporter_path):
+            yield "❌ Error: DiscordChatExporter not found. Make sure it's uploaded!\n"
+            return
+
+        yield "📤 Exporting Discord chat...\n"
         export_command = [discord_exporter_path, "export", "-t", discord_token, "-c", channel_id, "-f", "Json"]
         subprocess.run(export_command)
         yield "✅ Discord export complete.\n"
